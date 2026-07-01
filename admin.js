@@ -167,6 +167,27 @@
     return res.json();
   }
 
+  // Liest touren.html immer frisch, wendet transformFn an und schreibt zurück.
+  // Bei 409 (sha veraltet, z.B. weil kurz zuvor eine andere Änderung gespeichert wurde)
+  // wird automatisch mit frisch geladenem Stand erneut versucht.
+  async function updateTourenHtml(token, transformFn, commitMessage) {
+    var attempts = 0, lastErr = null;
+    while (attempts < 3) {
+      attempts++;
+      var current = await ghGetFile('touren.html', token);
+      if (!current) throw new Error('touren.html nicht gefunden.');
+      var updated = transformFn(current.text);
+      try {
+        await ghPutFile('touren.html', updated, commitMessage, token, current.sha);
+        return updated;
+      } catch (e) {
+        lastErr = e;
+        if (!/\b409\b/.test(e.message)) throw e;
+      }
+    }
+    throw lastErr;
+  }
+
   // ---------- Text-Bausteine & Marker-Splicing für touren.html ----------
 
   function renderCardHtml(cat, name, slug, distanceKm, elevationGainM) {
@@ -296,6 +317,14 @@
     el.style.display = msg ? 'block' : 'none';
   }
 
+  // Sperrt alle Schreib-Buttons waehrend eine Aenderung an touren.html laeuft,
+  // damit nicht zwei Speichervorgaenge gleichzeitig um denselben sha konkurrieren.
+  function setBusy(busy) {
+    document.querySelectorAll('.route-row button').forEach(function (b) { b.disabled = busy; });
+    var publishBtn = $('publishBtn');
+    if (publishBtn) publishBtn.disabled = busy ? true : !lastParsed;
+  }
+
   function setupGate() {
     var gate = $('gate'), content = $('content'), pwInput = $('pwInput'), tokenInput = $('ghToken'), pwError = $('pwError'), remember = $('rememberToken');
 
@@ -376,28 +405,30 @@
   async function renameTour(slug, newName, row) {
     if (!newName) { setStatus('Name darf nicht leer sein.', 'error'); return; }
     var token = getToken();
+    setBusy(true);
     try {
       setStatus('Speichere neuen Namen …', 'info');
-      var current = await ghGetFile('touren.html', token);
-      if (!current) throw new Error('touren.html nicht gefunden.');
-      var updated = renameCard(current.text, slug, newName);
-      await ghPutFile('touren.html', updated, 'Rename tour: ' + slug + ' -> ' + newName, token, current.sha);
+      await updateTourenHtml(token, function (html) {
+        return renameCard(html, slug, newName);
+      }, 'Rename tour: ' + slug + ' -> ' + newName);
       setStatus('Name geändert.', 'success');
     } catch (e) {
       setStatus('Fehler beim Umbenennen: ' + e.message, 'error');
+    } finally {
+      setBusy(false);
     }
   }
 
   async function deleteTour(slug, name, row) {
     if (!confirm('"' + name + '" wirklich löschen? Das entfernt die Karte von der Seite und die GPX-Datei aus dem Repository.')) return;
     var token = getToken();
+    setBusy(true);
     try {
       setStatus('Lösche "' + name + '" …', 'info');
-      var current = await ghGetFile('touren.html', token);
-      if (!current) throw new Error('touren.html nicht gefunden.');
-      var updated = deleteCard(current.text, slug);
-      updated = removeRoute(updated, slug);
-      await ghPutFile('touren.html', updated, 'Delete tour: ' + slug, token, current.sha);
+      await updateTourenHtml(token, function (html) {
+        var updated = deleteCard(html, slug);
+        return removeRoute(updated, slug);
+      }, 'Delete tour: ' + slug);
 
       var gpxPath = 'gpx/' + slug + '.gpx';
       var gpxFile = await ghGetFile(gpxPath, token);
@@ -407,6 +438,8 @@
       loadOverview();
     } catch (e) {
       setStatus('Fehler beim Löschen: ' + e.message, 'error');
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -464,32 +497,31 @@
     if (!token) { setStatus('Kein GitHub-Token vorhanden – bitte Seite neu entsperren.', 'error'); return; }
     if (!lastParsed) { setStatus('Bitte zuerst eine Vorschau erstellen.', 'error'); return; }
 
-    $('publishBtn').disabled = true;
+    setBusy(true);
     try {
       setStatus('Lade aktuelle touren.html …', 'info');
       var current = await ghGetFile('touren.html', token);
       if (!current) throw new Error('touren.html nicht gefunden im Repository.');
-
       var slug = findUniqueSlug(current.text, lastParsed.slugBase);
-      var cardHtml = renderCardHtml(lastParsed.category, lastParsed.name, slug, lastParsed.distanceKm, lastParsed.elevationGainM);
-      var routeEntry = renderRouteEntry(slug, lastParsed.latlonPoints);
-
-      var updated = insertCard(current.text, lastParsed.category, cardHtml);
-      updated = insertRoute(updated, routeEntry);
 
       setStatus('Lade GPX-Datei hoch …', 'info');
       await ghPutFile('gpx/' + slug + '.gpx', lastParsed.gpxText, 'Add GPX: ' + lastParsed.name, token, null);
 
       setStatus('Aktualisiere touren.html …', 'info');
-      await ghPutFile('touren.html', updated, 'Add tour: ' + lastParsed.name, token, current.sha);
+      var cardHtml = renderCardHtml(lastParsed.category, lastParsed.name, slug, lastParsed.distanceKm, lastParsed.elevationGainM);
+      var routeEntry = renderRouteEntry(slug, lastParsed.latlonPoints);
+      await updateTourenHtml(token, function (html) {
+        var updated = insertCard(html, lastParsed.category, cardHtml);
+        return insertRoute(updated, routeEntry);
+      }, 'Add tour: ' + lastParsed.name);
 
       setStatus('Veröffentlicht! "' + lastParsed.name + '" ist in 1-2 Minuten live (Slug: ' + slug + ').', 'success');
       lastParsed = null;
-      $('publishBtn').disabled = true;
       loadOverview();
     } catch (e) {
       setStatus('Fehler: ' + e.message, 'error');
-      $('publishBtn').disabled = false;
+    } finally {
+      setBusy(false);
     }
   }
 
