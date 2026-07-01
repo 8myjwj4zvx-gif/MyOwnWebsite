@@ -23,13 +23,25 @@ a:hover { text-decoration: underline; }
   max-width: 640px;
   margin: 0 auto;
   padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
+.logo-link { display: flex; align-items: center; flex-shrink: 0; }
+.logo-mark { height: 24px; width: auto; display: block; }
+.header-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.rad-link {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+}
+.rad-icon { width: 24px; height: 24px; display: block; }
 .hamburger {
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
-  margin-left: -8px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -48,7 +60,7 @@ a:hover { text-decoration: underline; }
 .menu {
   position: absolute;
   top: 100%;
-  left: 24px;
+  right: 24px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 10px;
