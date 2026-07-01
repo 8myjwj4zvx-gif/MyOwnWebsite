@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" id="menuToggle" aria-label="Menü öffnen" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="menu" id="menu">
+      <a href="index.html">Home</a>
+      <a href="touren.html">Meine Touren</a>
+      <a href="secret.html">Secret Content</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <h1>🔧 Admin</h1>
+
+    <div class="secret-box" id="gate">
+      <p>🔒 Passwort und GitHub-Token eingeben:</p>
+      <input type="password" id="pwInput" placeholder="Passwort"><br>
+      <input type="password" id="ghToken" placeholder="GitHub-Token (ghp_... / github_pat_...)" style="margin-top:8px;">
+      <button id="unlockBtn" style="margin-top:8px;">Entsperren</button>
+      <div class="pw-error" id="pwError">Falsches Passwort.</div>
+      <label class="admin-checkbox-label">
+        <input type="checkbox" id="rememberToken"> Token für diese Sitzung merken (nur dieser Tab)
+      </label>
+    </div>
+
+    <div id="content" style="display:none;">
+      <div class="admin-warning">
+        Dieses Repository ist öffentlich (nötig für kostenloses GitHub Pages). Diese Seite ist nirgends verlinkt,
+        aber technisch trotzdem für jeden erreichbar/einsehbar. Die eigentliche Absicherung ist dein GitHub-Token –
+        gib es nur hier ein, speichere es nirgends sonst, und nutze am besten ein
+        <strong>fine-grained Token</strong>, das nur für dieses eine Repository gilt
+        (<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">hier erstellen</a>,
+        Repository Access → nur "MyOwnWebsite" → Permissions → "Contents: Read and write").
+      </div>
+
+      <div class="status-box" id="statusArea" style="display:none;"></div>
+
+      <h2>Vorhandene Touren</h2>
+      <div class="admin-actions" style="margin-top:0;">
+        <button id="refreshOverviewBtn">Aktualisieren</button>
+      </div>
+      <div class="route-list" id="overviewList">
+        <p class="empty-state">Lade …</p>
+      </div>
+
+      <h2>Neue Tour hinzufügen</h2>
+
+      <label class="admin-label" for="tourName">Tourname</label>
+      <input class="admin-input" type="text" id="tourName" placeholder="z. B. Abendrunde Isartal">
+
+      <label class="admin-label" for="tourCategory">Kategorie</label>
+      <select class="admin-input" id="tourCategory">
+        <option value="rennrad">Rennrad</option>
+        <option value="wandern">Wandern</option>
+      </select>
+
+      <label class="admin-label" for="gpxFile">GPX-Datei</label>
+      <input class="admin-input" type="file" id="gpxFile" accept=".gpx">
+
+      <div class="admin-actions">
+        <button id="previewBtn">Vorschau anzeigen</button>
+        <button id="publishBtn" disabled>Veröffentlichen</button>
+      </div>
+
+      <div class="tour-card" id="previewArea" style="display:none; margin-top:20px;">
+        <h3 id="previewTitle"></h3>
+        <div class="tour-meta" id="previewMeta"></div>
+        <div class="tour-map" id="previewMap"></div>
+        <div class="tour-stats" id="previewStats"></div>
+      </div>
+    </div>
+
+    <footer>&copy; 2026 Daniel Überreiter</footer>
+  </div>
+
+  <script src="nav.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

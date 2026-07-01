@@ -4,32 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daniel Überreiter</title>
-  <style>
-    :root {
-      --bg: #fafafa;
-      --text: #1d1d1f;
-      --muted: #6e6e76;
-      --accent: #fc4c02;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-    .wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
-    h1 { font-size: 2.2rem; margin: 0 0 8px; }
-    .tagline { color: var(--muted); font-size: 1.1rem; margin-bottom: 40px; }
-    h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 40px 0 12px; }
-    p { margin: 0 0 16px; }
-    footer { margin-top: 60px; color: var(--muted); font-size: 0.85rem; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header class="site-header">
+    <button class="hamburger" id="menuToggle" aria-label="Menü öffnen" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="menu" id="menu">
+      <a href="index.html">Home</a>
+      <a href="touren.html">Meine Touren</a>
+      <a href="secret.html">Secret Content</a>
+    </nav>
+  </header>
+
   <div class="wrap">
     <h1>Hallo, ich bin Daniel 👋</h1>
     <p class="tagline">Aus München – unterwegs auf zwei Rädern, zu Fuß und gerade dabei, diese Seite hier aufzubauen.</p>
@@ -45,5 +33,7 @@
 
     <footer>&copy; 2026 Daniel Überreiter</footer>
   </div>
+
+  <script src="nav.js"></script>
 </body>
 </html>
