@@ -505,7 +505,9 @@
       var slug = findUniqueSlug(current.text, lastParsed.slugBase);
 
       setStatus('Lade GPX-Datei hoch …', 'info');
-      await ghPutFile('gpx/' + slug + '.gpx', lastParsed.gpxText, 'Add GPX: ' + lastParsed.name, token, null);
+      var gpxPath = 'gpx/' + slug + '.gpx';
+      var existingGpx = await ghGetFile(gpxPath, token);
+      await ghPutFile(gpxPath, lastParsed.gpxText, 'Add GPX: ' + lastParsed.name, token, existingGpx ? existingGpx.sha : null);
 
       setStatus('Aktualisiere touren.html …', 'info');
       var cardHtml = renderCardHtml(lastParsed.category, lastParsed.name, slug, lastParsed.distanceKm, lastParsed.elevationGainM);
